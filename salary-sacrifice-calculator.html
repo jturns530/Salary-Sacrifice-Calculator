@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Salary Sacrifice Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #f9f9f9;
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+  }
+  
+  .subtitle {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 32px;
+  }
+  
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .control-group label {
+    font-size: 14px;
+    color: #666;
+    min-width: 140px;
+  }
+  
+  .control-group input[type="range"] {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  
+  .control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2563eb;
+    cursor: pointer;
+  }
+  
+  .control-group input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2563eb;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .control-group .value {
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 100px;
+    text-align: right;
+    color: #1a1a1a;
+  }
+  
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 32px 0;
+  }
+  
+  .metric-card {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .metric-card .label {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  
+  .metric-card .amount {
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+  
+  .metric-card.success .amount {
+    color: #059669;
+  }
+  
+  .breakdown {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .breakdown h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+  }
+  
+  .breakdown table {
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+  }
+  
+  .breakdown th {
+    font-weight: 500;
+    text-align: right;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .breakdown th:first-child {
+    text-align: left;
+  }
+  
+  .breakdown td {
+    padding: 10px 0;
+    color: #666;
+  }
+  
+  .breakdown td:first-child {
+    color: #666;
+  }
+  
+  .breakdown td:not(:first-child) {
+    text-align: right;
+    color: #1a1a1a;
+  }
+  
+  .breakdown tr.total {
+    border-top: 1px solid #e0e0e0;
+    font-weight: 500;
+  }
+  
+  .breakdown tr.total td {
+    padding-top: 12px;
+    color: #1a1a1a;
+  }
+  
+  .breakdown .divider {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .explanation {
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    color: #1e40af;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  
+  .success-text {
+    color: #059669;
+  }
+  
+  @media (max-width: 600px) {
+    .container { padding: 20px; }
+    .metrics { grid-template-columns: 1fr; }
+    .control-group { flex-direction: column; align-items: flex-start; }
+    .control-group label { min-width: auto; }
+    .control-group .value { min-width: auto; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Salary sacrifice calculator</h1>
+  <p class="subtitle">See how pension contributions through salary sacrifice affect your tax and take-home pay</p>
+  
+  <div class="control-group">
+    <label for="salary">Annual salary</label>
+    <input type="range" id="salary" min="100000" max="350000" step="10000" value="150000">
+    <span class="value" id="salary-out">£150,000</span>
+  </div>
+  
+  <div class="control-group">
+    <label for="sacrifice">Sacrifice amount</label>
+    <input type="range" id="sacrifice" min="0" max="100000" step="1000" value="10000">
+    <span class="value" id="sacrifice-out">£10,000</span>
+  </div>
+  
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="label">Before sacrifice</div>
+      <div class="amount" id="before">£95,432</div>
+    </div>
+    <div class="metric-card success">
+      <div class="label">After sacrifice</div>
+      <div class="amount" id="after">£92,120</div>
+    </div>
+    <div class="metric-card success">
+      <div class="label">Tax saving</div>
+      <div class="amount" id="tax-save">£3,312</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Net cost to you</div>
+      <div class="amount" id="net-cost">£6,688</div>
+    </div>
+  </div>
+  
+  <div class="breakdown">
+    <h2>Breakdown</h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>No sacrifice</th>
+          <th>With sacrifice</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gross salary</td>
+          <td id="gross-before">£150,000</td>
+          <td id="gross-after">£140,000</td>
+        </tr>
+        <tr>
+          <td>Employer pension</td>
+          <td id="pension-before">£0</td>
+          <td id="pension-after" class="success-text">£10,000</td>
+        </tr>
+        <tr class="divider">
+          <td>Income tax</td>
+          <td id="tax-before">£48,432</td>
+          <td id="tax-after">£45,120</td>
+        </tr>
+        <tr>
+          <td>National Insurance</td>
+          <td id="ni-before">£6,136</td>
+          <td id="ni-after">£4,880</td>
+        </tr>
+        <tr class="total">
+          <td>Take home pay</td>
+          <td id="take-before">£95,432</td>
+          <td id="take-after">£90,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="breakdown">
+    <h2>Total pension pot contribution</h2>
+    <table>
+      <tbody>
+        <tr>
+          <td>Your salary sacrifice</td>
+          <td id="pension-sacrifice">£10,000</td>
+        </tr>
+        <tr>
+          <td>Minimum employer contribution (3%)</td>
+          <td id="pension-employer" class="success-text">£4,500</td>
+        </tr>
+        <tr class="total">
+          <td>Total going into pension pot</td>
+          <td id="pension-grand-total" class="success-text">£14,500</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="breakdown">
+    <h2>How salary sacrifice works</h2>
+    <table>
+      <tbody>
+        <tr>
+          <td>Your salary sacrifice amount</td>
+          <td id="pension-sacrifice-2">£10,000</td>
+        </tr>
+        <tr>
+          <td>Tax avoided (goes in pre-tax)</td>
+          <td id="pension-tax-relief" class="success-text">£4,000</td>
+        </tr>
+        <tr>
+          <td>NI avoided (goes in pre-NI)</td>
+          <td id="pension-ni-saving" class="success-text">£1,256</td>
+        </tr>
+        <tr class="total">
+          <td>Effective cost to you</td>
+          <td id="pension-effective-cost">£4,744</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="explanation" id="explanation">
+    You sacrifice £10,000 into your pension. This goes in before tax, so you save £3,312 in tax and NI. Your take-home drops by only £6,688, but your pension gets the full £10,000. That's a 50% boost from tax savings.
+  </div>
+</div>
+
+<script>
+const salaryEl = document.getElementById('salary');
+const sacrificeEl = document.getElementById('sacrifice');
+const salaryOut = document.getElementById('salary-out');
+const sacrificeOut = document.getElementById('sacrifice-out');
+
+function calcTax(gross) {
+  const pa = 12570;
+  let tax = 0;
+  
+  if (gross > 125140) {
+    const overLimit = gross - 125140;
+    const reducedPA = Math.max(0, pa - (overLimit / 2));
+    const taxable = gross - reducedPA;
+    
+    if (taxable > 125140) {
+      tax += (taxable - 125140) * 0.45;
+      const remaining = Math.min(taxable, 125140);
+      if (remaining > 50270) {
+        tax += (remaining - 50270) * 0.40;
+        if (remaining > reducedPA) {
+          tax += (50270 - reducedPA) * 0.20;
+        }
+      } else if (remaining > reducedPA) {
+        tax += (remaining - reducedPA) * 0.20;
+      }
+    } else {
+      if (taxable > 50270) {
+        tax += (taxable - 50270) * 0.40;
+        if (taxable > reducedPA) {
+          tax += (50270 - reducedPA) * 0.20;
+        }
+      } else if (taxable > reducedPA) {
+        tax += (taxable - reducedPA) * 0.20;
+      }
+    }
+  } else {
+    const taxable = gross - pa;
+    if (taxable > 50270) {
+      tax += (taxable - 50270) * 0.40;
+      tax += (50270 - pa) * 0.20;
+    } else if (taxable > 0) {
+      tax += taxable * 0.20;
+    }
+  }
+  
+  return Math.round(tax);
+}
+
+function calcNI(gross) {
+  const lower = 12570;
+  const upper = 50270;
+  let ni = 0;
+  
+  if (gross > upper) {
+    ni += (gross - upper) * 0.02;
+    ni += (upper - lower) * 0.12;
+  } else if (gross > lower) {
+    ni += (gross - lower) * 0.12;
+  }
+  
+  return Math.round(ni);
+}
+
+function update() {
+  const salary = parseInt(salaryEl.value);
+  const sacrifice = parseInt(sacrificeEl.value);
+  
+  salaryOut.textContent = '£' + salary.toLocaleString();
+  sacrificeOut.textContent = '£' + sacrifice.toLocaleString();
+  
+  const grossBefore = salary;
+  const grossAfter = salary - sacrifice;
+  
+  // Minimum employer contribution is 3% of original salary
+  const employerContribution = Math.round(salary * 0.03);
+  
+  const taxBefore = calcTax(grossBefore);
+  const taxAfter = calcTax(grossAfter);
+  
+  const niBefore = calcNI(grossBefore);
+  const niAfter = calcNI(grossAfter);
+  
+  const takeBefore = grossBefore - taxBefore - niBefore;
+  const takeAfter = grossAfter - taxAfter - niAfter;
+  
+  const taxSave = (taxBefore + niBefore) - (taxAfter + niAfter);
+  const netCost = takeBefore - takeAfter;
+  
+  // Calculate marginal tax rate for the sacrificed amount
+  const marginalTaxRate = sacrifice > 0 ? (taxBefore - taxAfter) / sacrifice : 0;
+  const marginalNIRate = sacrifice > 0 ? (niBefore - niAfter) / sacrifice : 0;
+  const taxRelief = Math.round(sacrifice * marginalTaxRate);
+  const niSaving = Math.round(sacrifice * marginalNIRate);
+  
+  const totalPension = sacrifice + employerContribution;
+  
+  document.getElementById('before').textContent = '£' + takeBefore.toLocaleString();
+  document.getElementById('after').textContent = '£' + takeAfter.toLocaleString();
+  document.getElementById('tax-save').textContent = '£' + taxSave.toLocaleString();
+  document.getElementById('net-cost').textContent = '£' + netCost.toLocaleString();
+  
+  document.getElementById('gross-before').textContent = '£' + grossBefore.toLocaleString();
+  document.getElementById('gross-after').textContent = '£' + grossAfter.toLocaleString();
+  document.getElementById('pension-before').textContent = '£0';
+  document.getElementById('pension-after').textContent = '£' + sacrifice.toLocaleString();
+  document.getElementById('tax-before').textContent = '£' + taxBefore.toLocaleString();
+  document.getElementById('tax-after').textContent = '£' + taxAfter.toLocaleString();
+  document.getElementById('ni-before').textContent = '£' + niBefore.toLocaleString();
+  document.getElementById('ni-after').textContent = '£' + niAfter.toLocaleString();
+  document.getElementById('take-before').textContent = '£' + takeBefore.toLocaleString();
+  document.getElementById('take-after').textContent = '£' + takeAfter.toLocaleString();
+  
+  // Update pension breakdown
+  document.getElementById('pension-sacrifice').textContent = '£' + sacrifice.toLocaleString();
+  document.getElementById('pension-sacrifice-2').textContent = '£' + sacrifice.toLocaleString();
+  document.getElementById('pension-employer').textContent = '£' + employerContribution.toLocaleString();
+  document.getElementById('pension-grand-total').textContent = '£' + totalPension.toLocaleString();
+  document.getElementById('pension-tax-relief').textContent = '£' + taxRelief.toLocaleString();
+  document.getElementById('pension-ni-saving').textContent = '£' + niSaving.toLocaleString();
+  document.getElementById('pension-effective-cost').textContent = '£' + netCost.toLocaleString();
+  
+  const savePct = sacrifice > 0 ? Math.round((taxSave / sacrifice) * 100) : 0;
+  
+  if (sacrifice === 0) {
+    document.getElementById('explanation').textContent = `Move the sacrifice slider to see how salary sacrifice works. With salary sacrifice, money goes into your pension before tax is calculated. Your employer also contributes the legal minimum of 3% (£${employerContribution.toLocaleString()}) of your salary.`;
+  } else {
+    document.getElementById('explanation').textContent = `You sacrifice £${sacrifice.toLocaleString()} and your employer adds the minimum 3% (£${employerContribution.toLocaleString()}). Total going into your pension: £${totalPension.toLocaleString()}. Because your sacrifice goes in before tax, you avoid £${taxRelief.toLocaleString()} in income tax and £${niSaving.toLocaleString()} in NI. Your take-home only drops by £${netCost.toLocaleString()}.`;
+  }
+}
+
+salaryEl.addEventListener('input', update);
+sacrificeEl.addEventListener('input', update);
+update();
+</script>
+
+</body>
+</html>
